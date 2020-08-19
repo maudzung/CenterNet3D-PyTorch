@@ -73,7 +73,7 @@ if __name__ == '__main__':
     from torchsummary import summary
     from easydict import EasyDict as edict
 
-    parser = argparse.ArgumentParser(description='RTM3D Implementation')
+    parser = argparse.ArgumentParser(description='CenterNet3D Implementation')
     parser.add_argument('-a', '--arch', type=str, default='resnet_18', metavar='ARCH',
                         help='The name of the model architecture')
     parser.add_argument('--head_conv', type=int, default=-1,

@@ -19,52 +19,52 @@ from models.deform_conv_v2 import DeformConv2d
 
 
 class CenterNet3D(nn.Module):
-    def __init__(self, sparse_shape, heads, head_conv, num_input_features=4):
+    def __init__(self, sparse_shape, heads, head_conv, num_input_features=4, bias=False):
         super(CenterNet3D, self).__init__()
 
         self.sparse_shape = sparse_shape
         self.heads = heads
 
         self.net3d = spconv.SparseSequential(
-            spconv.SubMConv3d(num_input_features, 16, 3, 1, 1),
+            spconv.SubMConv3d(num_input_features, 16, 3, 1, 1, bias=bias),
             nn.BatchNorm1d(16),
             nn.LeakyReLU(inplace=True),
-            spconv.SubMConv3d(16, 16, 3, 1, 1),
+            spconv.SubMConv3d(16, 16, 3, 1, 1, bias=bias),
             nn.BatchNorm1d(16),
             nn.LeakyReLU(inplace=True),
-            spconv.SparseConv3d(16, 32, 3, 2, 1),
+            spconv.SparseConv3d(16, 32, 3, 2, 1, bias=bias),
             nn.BatchNorm1d(32),
             nn.LeakyReLU(inplace=True),
 
-            spconv.SubMConv3d(32, 32, 3, 1, 1),
+            spconv.SubMConv3d(32, 32, 3, 1, 1, bias=bias),
             nn.BatchNorm1d(32),
             nn.LeakyReLU(inplace=True),
-            spconv.SubMConv3d(32, 32, 3, 1, 1),
+            spconv.SubMConv3d(32, 32, 3, 1, 1, bias=bias),
             nn.BatchNorm1d(32),
             nn.LeakyReLU(inplace=True),
-            spconv.SparseConv3d(32, 64, 3, 2, 1),
+            spconv.SparseConv3d(32, 64, 3, 2, 1, bias=bias),
             nn.BatchNorm1d(64),
             nn.LeakyReLU(inplace=True),
 
-            spconv.SubMConv3d(64, 64, 3, 1, 1),
+            spconv.SubMConv3d(64, 64, 3, 1, 1, bias=bias),
             nn.BatchNorm1d(64),
             nn.LeakyReLU(inplace=True),
-            spconv.SubMConv3d(64, 64, 3, 1, 1),
+            spconv.SubMConv3d(64, 64, 3, 1, 1, bias=bias),
             nn.BatchNorm1d(64),
             nn.LeakyReLU(inplace=True),
-            spconv.SubMConv3d(64, 64, 3, 1, 1),
+            spconv.SubMConv3d(64, 64, 3, 1, 1, bias=bias),
             nn.BatchNorm1d(64),
             nn.LeakyReLU(inplace=True),
-            spconv.SparseConv3d(64, 64, 3, 2, 1),
+            spconv.SparseConv3d(64, 64, 3, 2, 1, bias=bias),
             nn.BatchNorm1d(64),
             nn.LeakyReLU(inplace=True),
-            spconv.SubMConv3d(64, 64, 3, 1, 1),
+            spconv.SubMConv3d(64, 64, 3, 1, 1, bias=bias),
             nn.BatchNorm1d(64),
             nn.LeakyReLU(inplace=True),
-            spconv.SubMConv3d(64, 64, 3, 1, 1),
+            spconv.SubMConv3d(64, 64, 3, 1, 1, bias=bias),
             nn.BatchNorm1d(64),
             nn.LeakyReLU(inplace=True),
-            spconv.SubMConv3d(64, 64, 3, 1, 1),
+            spconv.SubMConv3d(64, 64, 3, 1, 1, bias=bias),
             nn.BatchNorm1d(64),
             nn.LeakyReLU(inplace=True)
         )
@@ -91,7 +91,7 @@ class CenterNet3D(nn.Module):
             num_output = self.heads[head]
             fc = nn.Sequential(
                 nn.Conv2d(128, head_conv, kernel_size=3, padding=1, bias=True),
-                nn.ReLU(inplace=True),
+                nn.LeakyReLU(inplace=True),
                 nn.Conv2d(head_conv, num_output, kernel_size=1, stride=1, padding=0))
 
             self.__setattr__('head_{}'.format(head), fc)
