@@ -346,8 +346,7 @@ if __name__ == '__main__':
     configs.num_conners = 4
     configs.num_input_features = 4
 
-    # configs.dataset_dir = os.path.join('../../', 'dataset', 'kitti')
-    configs.dataset_dir = os.path.join('/media/nmdung/SSD_4TB_Disk_2/Complex_YOLOv4_Pytorch', 'dataset', 'kitti')
+    configs.dataset_dir = os.path.join('../../', 'dataset', 'kitti')
     lidar_aug = OneOf([
         Random_Rotation(limit_angle=np.pi / 4, p=1.),
         Random_Scaling(scaling_range=(0.95, 1.05), p=1.),
