@@ -66,11 +66,10 @@ python kitti_dataset.py
 
 #### 2.4.2. Inference
 
-In progress...
+```
+python test.py --gpu_idx 0 --peak_thresh 0.2
+```
 
-#### 2.4.3. Evaluation
-
-In progress...
 
 #### 2.4.4. Training
 
