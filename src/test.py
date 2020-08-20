@@ -94,6 +94,7 @@ def parse_test_configs():
         'dim': configs.num_dim,
         'hm_conners': configs.num_classes  # equal classes --> 3
     }
+    configs.num_input_features = 4
 
     ####################################################################
     ##############Dataset, Checkpoints, and results dir configs#########
@@ -137,20 +138,23 @@ if __name__ == '__main__':
             outputs['direction'] = _sigmoid(outputs['direction'])
             # detections size (batch_size, K, 10)
             detections = centernet3d_decode(outputs['hm_cen'], outputs['hm_conners'], outputs['cen_offset'],
-                                      outputs['direction'], outputs['z_coor'], outputs['dim'], K=configs.K)
+                                            outputs['direction'], outputs['z_coor'], outputs['dim'], K=configs.K)
             detections = detections.cpu().numpy()
             detections = post_processing(detections, configs.num_classes, configs.down_ratio)
             detections = get_final_pred(detections[0], configs.num_classes, configs.peak_thresh)
-
+            car_detections = detections[0]
             # calib = kitti_data_utils.Calibration(img_paths[0].replace(".png", ".txt").replace("image_2", "calib"))
+            if len(car_detections) > 0:
+                # Draw prediction in the image
+                pred_boxes3d = []
+                for car_det in car_detections[:, 1:]:
+                    pred_boxes3d.append(box3d_center_to_conners(car_det))
 
-            # Draw prediction in the image
-            pred_boxes3d = box3d_center_to_conners(detections[0][0][:, 1:])
-            fig = draw_lidar(lidarData[0], is_grid=False, is_top_region=True)
-            cls_ids = np.zeros((len(detections[0][0])), dtype=np.int)
-            draw_gt_boxes3d(gt_boxes3d=pred_boxes3d, fig=fig, cls_ids=cls_ids)
-            # mlab.savefig(filename='test.png')
-            mlab.show()
+                fig = draw_lidar(lidarData[0], is_grid=False, is_top_region=True)
+                cls_ids = np.zeros((len(car_detections)), dtype=np.int)
+                draw_gt_boxes3d(gt_boxes3d=pred_boxes3d, fig=fig, cls_ids=cls_ids)
+                # mlab.savefig(filename='test.png')
+                mlab.show()
 
             print('\tDone testing the {}th sample, time: {:.1f}ms, speed {:.2f}FPS'.format(batch_idx, (t2 - t1) * 1000,
                                                                                            1 / (t2 - t1)))

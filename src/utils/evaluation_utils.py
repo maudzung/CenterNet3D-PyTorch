@@ -91,7 +91,7 @@ def centernet3d_decode(hm_cen, hm_conners, cen_offset, direction, z_coor, dim, K
         ys = ys.view(batch_size, K, 1) + 0.5
 
     direction = _transpose_and_gather_feat(direction, inds)
-    direction = direction.view(batch_size, K, 8)
+    direction = direction.view(batch_size, K, 2)
     z_coor = _transpose_and_gather_feat(z_coor, inds)
     z_coor = z_coor.view(batch_size, K, 1)
     dim = _transpose_and_gather_feat(dim, inds)
@@ -99,10 +99,10 @@ def centernet3d_decode(hm_cen, hm_conners, cen_offset, direction, z_coor, dim, K
     clses = clses.view(batch_size, K, 1).float()
     scores = scores.view(batch_size, K, 1)
 
-    # (scores x 1, xs x 1, ys x 1, direction x 2, z_coor x 1, dim x 3, clses x 1)
-    # (scores-0:1, xs-1:2, ys-2:3, direction-3:5, z_coor-5:6, dim-6:9, clses-9:10)
+    # (scores x 1, ys x 1, xs x 1, z_coor x 1, dim x 3, direction x 2, clses x 1)
+    # (scores-0:1, ys-1:2, xs-2:3, z_coor-3:4, dim-4:7, direction-7:9, clses-9:10)
     # detections: [batch_size, K, 10]
-    detections = torch.cat([scores, xs, ys, direction, z_coor, dim, clses], dim=2)
+    detections = torch.cat([scores, ys, xs, z_coor, direction, dim, clses], dim=2)
 
     return detections
 
@@ -114,11 +114,11 @@ def get_yaw(direction):
 def post_processing(detections, num_classes=3, down_ratio=4):
     """
     :param detections: [batch_size, K, 10]
-    # (scores x 1, xs x 1, ys x 1, direction x 2, z_coor x 1, dim x 3, clses x 1)
-    # (scores-0:1, xs-1:2, ys-2:3, direction-3:5, z_coor-5:6, dim-6:9, clses-9:10)
+    # (scores x 1, ys x 1, xs x 1, z_coor x 1, dim x 3, direction x 2, clses x 1)
+    # (scores-0:1, ys-1:2, xs-2:3, z_coor-3:4, dim-4:7, direction-7:9, clses-9:10)
     :return:
     """
-    # TODO: Need to consider rescale to the original scale: bbox, xs, ys, and ver_coor - 1:25
+    # TODO: Need to consider rescale to the original scale: x, y
 
     ret = []
     for i in range(detections.shape[0]):
@@ -130,19 +130,19 @@ def post_processing(detections, num_classes=3, down_ratio=4):
             bc = cnf.boundary
             top_preds[j] = np.concatenate([
                 detections[i, inds, :1].astype(np.float32),
-                detections[i, inds, 2:3].astype(np.float32) * down_ratio / 1400 * cnf.bound_size_x + bc['minX'],
-                detections[i, inds, 1:2].astype(np.float32) * down_ratio / 1600 * cnf.bound_size_y + bc['minY'],
-                detections[i, inds, 5:6].astype(np.float32),
-                detections[i, inds, 6:9].astype(np.float32),
-                get_yaw(detections[i, inds, 3:5]).astype(np.float32)], axis=1),
-            ret.append(top_preds)
+                detections[i, inds, 1:2].astype(np.float32) * down_ratio / 1400 * cnf.bound_size_x + bc['minX'],
+                detections[i, inds, 2:3].astype(np.float32) * down_ratio / 1600 * cnf.bound_size_y + bc['minY'],
+                detections[i, inds, 3:4].astype(np.float32),
+                detections[i, inds, 4:7].astype(np.float32),
+                get_yaw(detections[i, inds, 7:9]).astype(np.float32)], axis=1)
+        ret.append(top_preds)
 
     return ret
 
 
 def get_final_pred(detections, num_classes=3, peak_thresh=0.2):
     for j in range(num_classes):
-        if len(detections[j] > 0):
+        if len(detections[j]) > 0:
             keep_inds = (detections[j][:, 0] > peak_thresh)
             detections[j] = detections[j][keep_inds]
 

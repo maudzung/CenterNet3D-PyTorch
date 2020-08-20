@@ -87,6 +87,10 @@ class KittiDataset(Dataset):
 
         voxels_features = torch.from_numpy(voxels_features)
         voxels_coors = torch.from_numpy(voxels_coors)
+        num_points_per_voxel = torch.from_numpy(num_points_per_voxel)
+
+        voxels_features = self.simplified_voxel(voxels_features, num_points_per_voxel,
+                                                self.num_input_features)
 
         return sample_id, lidarData, voxels_features, voxels_coors
 
@@ -158,7 +162,7 @@ class KittiDataset(Dataset):
             b_voxel_features.append(features)
             b_voxel_coords.append(np.pad(coors, ((0, 0), (1, 0)), mode='constant', constant_values=i))
 
-        return b_sample_id, b_lidarData, batch_size, torch.cat(b_voxel_features), \
+        return b_sample_id, batch_size, b_lidarData, torch.cat(b_voxel_features), \
                torch.from_numpy(np.concatenate(b_voxel_coords))
 
     def get_image(self, idx):
