@@ -54,7 +54,7 @@ class KittiDataset(Dataset):
         self.lidar_dir = os.path.join(self.dataset_dir, sub_folder, "velodyne")
         self.calib_dir = os.path.join(self.dataset_dir, sub_folder, "calib")
         self.label_dir = os.path.join(self.dataset_dir, sub_folder, "label_2")
-        split_txt_path = os.path.join(self.dataset_dir, 'ImageSets', 'yolo3d', '{}.txt'.format(mode))
+        split_txt_path = os.path.join(self.dataset_dir, 'ImageSets', '{}.txt'.format(mode))
         self.sample_id_list = [int(x.strip()) for x in open(split_txt_path).readlines()]
 
         if num_samples is not None:

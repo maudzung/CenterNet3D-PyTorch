@@ -24,32 +24,18 @@ from utils.lr_scheduler import OneCyclePolicy
 
 def create_optimizer(configs, model):
     """Create optimizer for training process
-    Refer from https://github.com/ultralytics/yolov3/blob/e80cc2b80e3fd46395e8ec75f843960100927ff2/train.py#L94
     """
     if hasattr(model, 'module'):
-        params_dict = dict(model.module.named_parameters())
+        train_params = [param for param in model.module.parameters() if param.requires_grad]
     else:
-        params_dict = dict(model.named_parameters())
-
-    pg0, pg1, pg2 = [], [], []  # optimizer parameter groups
-    for k, v in params_dict.items():
-        if '.bias' in k:
-            pg2 += [v]  # biases
-        elif ('conv' in k) and ('.weight' in k):
-            pg1 += [v]  # apply weight_decay
-        else:
-            pg0 += [v]  # all else
+        train_params = [param for param in model.parameters() if param.requires_grad]
 
     if configs.optimizer_type == 'sgd':
-        optimizer = torch.optim.SGD(pg0, lr=configs.lr, momentum=configs.momentum, nesterov=True)
+        optimizer = torch.optim.SGD(train_params, lr=configs.lr, momentum=configs.momentum, nesterov=True)
     elif configs.optimizer_type == 'adam':
-        optimizer = torch.optim.Adam(pg0, lr=configs.lr)
+        optimizer = torch.optim.Adam(train_params, lr=configs.lr, weight_decay=configs.weight_decay)
     else:
         assert False, "Unknown optimizer type"
-
-    optimizer.add_param_group({'params': pg1, 'weight_decay': configs.weight_decay})  # add pg1 with weight_decay
-    optimizer.add_param_group({'params': pg2})  # add pg2 (biases)
-    print('Optimizer groups: %g .bias, %g Conv2d.weight, %g other' % (len(pg2), len(pg1), len(pg0)))
 
     return optimizer
 
